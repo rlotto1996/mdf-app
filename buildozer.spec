@@ -19,11 +19,13 @@ android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 android.api         = 33
 android.minapi      = 21
 android.ndk         = 25b
-android.sdk         = 33
+android.target_sdk  = 33
+android.ndk_api     = 21
 android.accept_sdk_license = True
 
-# Evita crash em dispositivos sem GPU dedicada
-android.archs = arm64-v8a, armeabi-v7a
+# Para debug, usar apenas arm64-v8a reduz o tempo de build pela metade
+# Adicione armeabi-v7a apenas no build de release se necessário
+android.archs = arm64-v8a
 
 # ─── ÍCONE E SPLASH (opcional — substituir pelos seus) ───────────────────────
 # icon.filename     = %(source.dir)s/icon.png
