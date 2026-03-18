@@ -1,0 +1,59 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Configurar Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Instalar dependências do sistema
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          git zip unzip openjdk-17-jdk \
+          autoconf libtool pkg-config \
+          libffi-dev libssl-dev \
+          gettext autopoint \
+          build-essential
+
+    - name: Instalar Buildozer e Cython
+      run: |
+        pip install buildozer cython
+
+    - name: Injetar API keys via variáveis de ambiente
+      run: |
+        sed -i "s|os.environ.get(\"BINANCE_API_KEY\", \"\")|\"${{ secrets.BINANCE_API_KEY }}\"|g" fetcher_core.py
+        sed -i "s|os.environ.get(\"COINALYZE_API_KEY\", \"\")|\"${{ secrets.COINALYZE_API_KEY }}\"|g" fetcher_core.py
+        sed -i "s|os.environ.get(\"TWELVEDATA_API_KEY\", \"\")|\"${{ secrets.TWELVEDATA_API_KEY }}\"|g" fetcher_core.py
+
+    - name: Cache Buildozer
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.buildozer
+          ~/.gradle
+        key: buildozer-${{ hashFiles('buildozer.spec') }}
+        restore-keys: buildozer-
+
+    - name: Compilar APK
+      run: |
+        buildozer android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: MarketDataFetcher-APK
+        path: bin/*.apk
+        retention-days: 30
